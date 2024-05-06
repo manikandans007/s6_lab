@@ -1,52 +1,30 @@
 #include<stdio.h>
-#include<stdlib.h>
-
-struct packet {
-    int time;
-    int size;
-};
-
-int main() {
-    int i, n, m, k = 0;
-    int b_size, b_current, b_outrate;
-    printf("Enter the no. of packets: ");
-    scanf("%d", &n);
-    struct packet p[n];
-    printf("\nEnter the packets in the order of their arrival time: \n");
-    for (i = 0; i < n; i++) {
-        printf("Enter the time and size: ");
-        scanf("%d %d", &p[i].time, &p[i].size);
-    }
-    printf("\nEnter the bucket size: ");
-    scanf("%d", &b_size);
-    printf("Enter the output rate: ");
-    scanf("%d", &b_outrate);
-    m = p[n - 1].time;
-    i = 1;
-    k = 0;
-    b_current = 0;
-    while (i <= m || b_current != 0) {
-        printf("\nAt time %d", i);
-        if (k < n && p[k].time == i) {
-            if (b_size >= b_current + p[k].size) {
-                b_current += p[k].size;
-                printf("\n%d byte packet is inserted", p[k].size);
-                k++;
-            } else {
-                printf("\n%d byte packet is discarded", p[k].size);
-                k++;
-            }
+int main()
+{
+    int bucket_size,n,outgoing,incoming,store=0;
+    printf("Enter bucket size : ");
+    scanf("%d",&bucket_size);
+    printf("Enter Outgoing Rate : ");
+    scanf("%d",&outgoing);
+    printf("Enter No: of Inputs : ");
+    scanf("%d",&n);
+    while(n!=0)
+    {
+        printf("\nEnter Incoming Packet Size : ");
+        scanf("%d",&incoming);
+        printf("\nIncoming Packet Size : %d\n",incoming);
+        if(incoming<=(bucket_size-store))
+        {
+            store+=incoming;
+            printf("Bucket Buffer Size %d out of %d\n",store,bucket_size);
         }
-        if (b_current >= b_outrate) {
-            printf("\n%d bytes transferred", b_outrate);
-            b_current -= b_outrate;
-        } else {
-            printf("\n%d bytes transferred", b_current);
-            b_current = 0;
+        else
+        {
+            printf("Dropped %d no: of packets.\n",incoming-(bucket_size-store));
+            printf("Bucket Buffer Size %d out of %d\n",store,bucket_size);
+            store=bucket_size;
         }
-        printf("\nPackets in the bucket %d byte(s)\n", b_current);
-        i++;
+        store=store-outgoing;
+        printf("After Outgoing %d Packets Left out of %d in Buffer..\n\n",store,bucket_size);
     }
-    return 0;
 }
-
