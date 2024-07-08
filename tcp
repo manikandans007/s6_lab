@@ -1,108 +1,104 @@
-//client.c
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h> // for close()
 
-int main() {
-    char buf[100];
-    int k;
-    int sock_desc;
-    struct sockaddr_in client;
+//client
+#include<stdio.h>
+#include<stdlib.h>
+#include<sys/socket.h>
+#include<netinet/in.h>
+#include<arpa/inet.h>
+#include<string.h>
+#include<unistd.h>
+#include<fcntl.h>
+#include<netdb.h>
 
-    sock_desc = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock_desc == -1) {
-        printf("Error in socket creation!");
-        return 1; // Exit with error code
-    }
 
-    memset(&client, 0, sizeof(client)); // Initialize client structure
-    client.sin_family = AF_INET;
-    client.sin_addr.s_addr = INADDR_ANY;
-    client.sin_port = htons(3003); // Convert port to network byte order
+void main(){
 
-    k = connect(sock_desc, (struct sockaddr *)&client, sizeof(client));
-    if (k == -1) {
-        printf("Error in connecting to server!");
-        close(sock_desc); // Close socket before returning
-        return 1; // Exit with error code
-    }
+int sockfd;
+struct sockaddr_in servaddr,cliaddr;
+char buffer[50],square_str[1024];int length;
+int c;
+sockfd=socket(AF_INET,SOCK_STREAM,0);
+servaddr.sin_addr.s_addr=inet_addr("127.0.0.1");
+servaddr.sin_family=AF_INET;
+servaddr.sin_port=htons(8081);
 
-    printf("\nEnter data to be sent: ");
-    fgets(buf, sizeof(buf), stdin);
+c=connect(sockfd,(struct sockaddr*)&servaddr,sizeof(servaddr));
+if(c<0)
+{printf("connection not successful\n");
 
-    k = send(sock_desc, buf, strlen(buf), 0);
-    if (k == -1) {
-        printf("Error in sending!");
-        close(sock_desc); // Close socket before returning
-        return 1; // Exit with error code
-    }
+}
+else{
+printf("connection successful\n");
+}
 
-    close(sock_desc); // Close socket
-    return 0;
+printf("enter the string to be send\n");
+scanf("%s",buffer);
+printf("sending the string to server\n");
+send(sockfd,buffer,sizeof(buffer),0);
+recv(sockfd,square_str,sizeof(square_str),0);
+printf("the size of string received is %s",square_str);
+exit(1);
+close(sockfd);
+
 }
 //server.c
-#include <netinet/in.h>
+#include <netdb.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <unistd.h> // for close()
+#include <string.h>
 #include <sys/socket.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 
-int main() {
-    char buf[100];
-    int k;
-    socklen_t len;
-    int sock_desc, temp_sock_desc;
-    struct sockaddr_in server, client;
 
-    sock_desc = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock_desc == -1) {
-        printf("Error in socket creation");
-        return 1; // Exit with error code
-    }
+int main(){
 
-    memset(&server, 0, sizeof(server)); // Initialize server structure
-    server.sin_family = AF_INET;
-    server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons(3003); // Convert port to network byte order
+int sockfd;
+struct sockaddr_in servaddr,cliaddr;char buffer[50];int b;int connfd;
 
-    if (bind(sock_desc, (struct sockaddr *)&server, sizeof(server)) == -1) {
-        printf("Error in binding");
-        close(sock_desc); // Close socket before returning
-        return 1; // Exit with error code
-    }
+sockfd=socket(AF_INET,SOCK_STREAM,0);
+servaddr.sin_addr.s_addr=INADDR_ANY;
+servaddr.sin_family=AF_INET;
+servaddr.sin_port=htons(8081);
 
-    if (listen(sock_desc, 5) == -1) {
-        printf("Error in listening");
-        close(sock_desc); // Close socket before returning
-        return 1; // Exit with error code
-    }
+int a=sizeof(servaddr);
+socklen_t len=sizeof(cliaddr);
 
-    len = sizeof(client);
-    temp_sock_desc = accept(sock_desc, (struct sockaddr *)&client, &len);
-    if (temp_sock_desc == -1) {
-        printf("Error in temporary socket creation");
-        close(sock_desc); // Close socket before returning
-        return 1; // Exit with error code
-    }
-
-    k = recv(temp_sock_desc, buf, sizeof(buf), 0);
-    if (k == -1) {
-        printf("Error in receiving");
-        close(temp_sock_desc); // Close temporary socket before returning
-        close(sock_desc); // Close socket before returning
-        return 1; // Exit with error code
-    }
-
-    printf("Message received from client: %s", buf);
-
-    close(temp_sock_desc); // Close temporary socket
-    close(sock_desc); // Close socket
-    return 0;
+b=bind(sockfd,(struct sockaddr*)&servaddr,a);
+if(b<0)
+{
+printf("Can't bind\n");
+exit(1);
 }
+else{
+printf("binded successfully\n");
+}
+listen(sockfd,5);
+printf("server is listening\n");
+
+connfd=accept(sockfd,(struct sockaddr*)&servaddr,&a);
+if(connfd<0)
+{
+printf("connection not set up");
+}
+else{
+printf("connection is set\n");}
+
+recv(connfd,buffer,sizeof(buffer),0);
+int num=atoi(buffer);
+
+int square=num*num;
+ char square_str[1024];
+    sprintf(square_str, "%d", square);
+//int length=strlen(buffer);
+
+send(connfd,square_str,sizeof(square_str),0);
+printf("sending length\n");
+
+exit(1);
+close(sockfd);
 
 
+
+}
 
